@@ -531,8 +531,6 @@ textarea { resize: vertical; min-height: 6rem; line-height: 1.55; }
   .recipe-col-ings {
     position: sticky;
     top: calc(var(--header-h) + 1rem);
-    max-height: calc(100vh - var(--header-h) - 2rem);
-    overflow-y: auto;
   }
   .recipe-col-ings .section-head,
   .recipe-col-steps .section-head { margin-top: 0.5rem; }

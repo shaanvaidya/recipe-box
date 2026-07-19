@@ -6,7 +6,7 @@
   var Imp = window.RecipeBox.Importers;
   var GH = window.RecipeBox.GitHub;
 
-  var APP_VERSION = "8 — 2026-07-19";
+  var APP_VERSION = "9 — 2026-07-19";
   var CATEGORIES = ["breakfast", "mains", "sides", "soups & salads", "pasta", "dessert", "baking", "drinks", "snacks", "sauces & staples", "other"];
   var IDX_KEY = "rb_index";
   var RECIPE_KEY = "rb_recipe_";
@@ -492,7 +492,7 @@
     (r.steps || []).forEach(function (s) {
       html += "<li><span>" + esc(state.metric ? Ing.annotateStepText(s) : s) + "</span></li>";
     });
-    html += "</ol></div></div>";
+    html += "</ol>";
 
     html += '<h2 class="section-head">Notes</h2>';
     html += '<div class="notes-block" id="notes-block">';
@@ -510,6 +510,7 @@
     }
     html += '<p class="source-line">Added ' + esc(fmtDate(r.createdAt)) + (r.updatedAt !== r.createdAt ? " · updated " + esc(fmtDate(r.updatedAt)) : "") +
       ' · <button class="delete-quiet" id="delete-btn">delete recipe</button></p>';
+    html += "</div></div>";
 
     v.innerHTML = html;
 
