@@ -269,6 +269,25 @@
     });
   }
 
+  // ----- ingredient section headers -----
+
+  // "For the Eggs", "Sauce:", "# Topping" are headers, not ingredients.
+  // Detection is done at render time so recipes imported before this existed
+  // (headers saved as qty-less ingredients) display correctly without migration.
+  function isSectionHeader(ing) {
+    var raw = (typeof ing === "string" ? ing : ing && ing.raw) || "";
+    raw = raw.trim();
+    if (/^#\s*\S/.test(raw)) return true;
+    if (typeof ing === "object" && ing && ing.qty !== null && ing.qty !== undefined) return false;
+    if (/^[^:]{2,50}:$/.test(raw)) return true;
+    if (/^for\s+(the\s+|a\s+|an\s+)?\S[^,.;]{1,40}$/i.test(raw)) return true;
+    return false;
+  }
+
+  function sectionLabel(raw) {
+    return String(raw).trim().replace(/^#\s*/, "").replace(/:$/, "").trim();
+  }
+
   // ----- misc parsing -----
 
   function parseServings(v) {
@@ -318,6 +337,8 @@
     UNIT_MAP: UNIT_MAP,
     DENSITIES: DENSITIES,
     parseIngredient: parseIngredient,
+    isSectionHeader: isSectionHeader,
+    sectionLabel: sectionLabel,
     formatQty: formatQty,
     displayIngredient: displayIngredient,
     densityFor: densityFor,

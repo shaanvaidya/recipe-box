@@ -471,6 +471,10 @@
     html += '<h2 class="section-head">Ingredients</h2>';
     html += '<ul class="ing-list" id="ing-list">';
     (r.ingredients || []).forEach(function (ing, i) {
+      if (Ing.isSectionHeader(ing)) {
+        html += '<li class="ing-section">' + esc(Ing.sectionLabel(ing.raw)) + "</li>";
+        return;
+      }
       var d = Ing.displayIngredient(ing, { factor: state.scale, metric: state.metric });
       html += '<li><label class="ing-row"><input type="checkbox" data-ing="' + i + '"' + (state.checked.has(i) ? " checked" : "") + ">" +
         '<span class="ing-text">' +
@@ -801,6 +805,7 @@
       "</div>";
     html += '<div class="field"><label for="f-ingredients">Ingredients — one per line</label>' +
       '<textarea id="f-ingredients" rows="10" placeholder="1 ½ cups chickpeas&#10;2 tbsp olive oil&#10;salt, to taste">' + esc(d.ingredientsText) + "</textarea>" +
+      '<div class="form-hint">End a line with “:” to make a section header (e.g. <em>For the sauce:</em>)</div>' +
       '<div class="parse-preview" id="parse-preview" hidden></div></div>';
     html += '<div class="field"><label for="f-steps">Steps — one per line</label>' +
       '<textarea id="f-steps" rows="10" placeholder="Heat the oil in a large pan.&#10;Add the onion and cook until golden.">' + esc(d.stepsText) + "</textarea></div>";
@@ -828,6 +833,7 @@
       preview.innerHTML = "<strong style='font-size:0.75rem;text-transform:uppercase;letter-spacing:0.06em'>How I read it</strong><br>" +
         lines.map(function (l) {
           var p = Ing.parseIngredient(l);
+          if (Ing.isSectionHeader(p)) return '<span class="ps">— ' + esc(Ing.sectionLabel(l)) + " —</span>";
           if (p.qty === null) return "· " + esc(l);
           var qty = Ing.formatQty(p.qty) + (p.qtyHigh ? "–" + Ing.formatQty(p.qtyHigh) : "");
           return '· <span class="pq">' + esc(qty) + "</span>" +
@@ -1057,6 +1063,10 @@
       "</div>";
     html += '<div class="cook-ing-sheet" id="cook-ing-sheet"' + (c.showIngs ? "" : " hidden") + '><ul class="ing-list">';
     (r.ingredients || []).forEach(function (ing, i) {
+      if (Ing.isSectionHeader(ing)) {
+        html += '<li class="ing-section">' + esc(Ing.sectionLabel(ing.raw)) + "</li>";
+        return;
+      }
       var d = Ing.displayIngredient(ing, { factor: state.scale, metric: state.metric });
       html += '<li><label class="ing-row"><input type="checkbox" data-cing="' + i + '"' + (state.checked.has(i) ? " checked" : "") + ">" +
         '<span class="ing-text">' + (d.qtyText ? '<span class="ing-qty">' + esc(d.qtyText) + "</span> " : "") + esc(d.itemText) + "</span></label></li>";

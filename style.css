@@ -437,6 +437,17 @@ textarea { resize: vertical; min-height: 6rem; line-height: 1.55; }
 .scale-input { width: 4.2rem !important; text-align: center; padding: 0.3rem 0.4rem; }
 
 .ing-list { list-style: none; margin: 0 0 0.5rem; padding: 0; }
+.ing-section {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--accent-ink);
+  padding: 1rem 0.2rem 0.3rem;
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: baseline; gap: 0.6rem;
+}
+.ing-list .ing-section:first-child { padding-top: 0.1rem; }
 .ing-row {
   display: flex; align-items: baseline; gap: 0.65rem;
   padding: 0.42rem 0.2rem;
@@ -561,6 +572,7 @@ textarea { resize: vertical; min-height: 6rem; line-height: 1.55; }
 }
 .parse-preview .pq { color: var(--accent-ink); font-weight: 700; }
 .parse-preview .pu { color: var(--gold); font-weight: 700; }
+.parse-preview .ps { color: var(--accent-ink); font-style: italic; font-weight: 700; }
 
 .photo-field { display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; }
 .photo-thumb {

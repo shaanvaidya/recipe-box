@@ -2,7 +2,7 @@
    this never touches api.github.com or the import proxies. */
 "use strict";
 
-var CACHE = "rb-shell-v1";
+var CACHE = "rb-shell-v2";
 var SHELL = [
   "./",
   "./index.html",
