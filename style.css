@@ -510,6 +510,26 @@ textarea { resize: vertical; min-height: 6rem; line-height: 1.55; }
 .source-line { color: var(--ink-dim); font-size: 0.88rem; margin-top: 1.5rem; }
 .source-line a { color: var(--accent-ink); }
 
+/* Two-column cookbook spread on wide screens: sticky ingredients | steps.
+   Below the breakpoint the divs simply stack in normal flow. */
+@media (min-width: 1020px) {
+  main.wide { max-width: 1060px; }
+  .recipe-columns {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+  .recipe-col-ings {
+    position: sticky;
+    top: calc(var(--header-h) + 1rem);
+    max-height: calc(100vh - var(--header-h) - 2rem);
+    overflow-y: auto;
+  }
+  .recipe-col-ings .section-head,
+  .recipe-col-steps .section-head { margin-top: 0.5rem; }
+}
+
 /* ---------- Add / edit forms ---------- */
 
 .add-tabs { margin-bottom: 1.4rem; }

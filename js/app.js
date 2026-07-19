@@ -6,7 +6,7 @@
   var Imp = window.RecipeBox.Importers;
   var GH = window.RecipeBox.GitHub;
 
-  var APP_VERSION = "4 — 2026-07-19";
+  var APP_VERSION = "5 — 2026-07-19";
   var CATEGORIES = ["breakfast", "mains", "sides", "soups & salads", "pasta", "dessert", "baking", "drinks", "snacks", "sauces & staples", "other"];
   var IDX_KEY = "rb_index";
   var RECIPE_KEY = "rb_recipe_";
@@ -156,6 +156,7 @@
         (key === "settings" && name === "settings");
       a.classList.toggle("active", active);
     });
+    $("main").classList.toggle("wide", name === "recipe");
     window.scrollTo(0, 0);
     if (name === "list") renderList();
     else if (name === "recipe") openRecipe(state.route.id);
@@ -469,6 +470,8 @@
       "</div>" +
       "</div>";
 
+    html += '<div class="recipe-columns">';
+    html += '<div class="recipe-col-ings">';
     html += '<h2 class="section-head">Ingredients</h2>';
     html += '<ul class="ing-list" id="ing-list">';
     (r.ingredients || []).forEach(function (ing, i) {
@@ -482,14 +485,15 @@
         (d.qtyText ? '<span class="ing-qty">' + esc(d.qtyText) + "</span> " : "") +
         esc(d.itemText) + "</span></label></li>";
     });
-    html += "</ul>";
+    html += "</ul></div>";
 
+    html += '<div class="recipe-col-steps">';
     html += '<h2 class="section-head">Steps</h2>';
     html += '<ol class="steps-list">';
     (r.steps || []).forEach(function (s) {
       html += "<li><span>" + esc(state.metric ? Ing.annotateStepText(s) : s) + "</span></li>";
     });
-    html += "</ol>";
+    html += "</ol></div></div>";
 
     html += '<h2 class="section-head">Notes</h2>';
     html += '<div class="notes-block" id="notes-block">';
