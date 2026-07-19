@@ -1,8 +1,10 @@
-/* App-shell cache only. Recipe data is cached in localStorage by the app;
-   this never touches api.github.com or the import proxies. */
+/* App-shell cache with stale-while-revalidate: pages load instantly from
+   cache, and every visit refreshes the shell in the background so deploys
+   arrive on the next open without needing a cache-version bump.
+   Never touches api.github.com or the import proxies (different origins). */
 "use strict";
 
-var CACHE = "rb-shell-v2";
+var CACHE = "rb-shell-v3";
 var SHELL = [
   "./",
   "./index.html",
@@ -36,17 +38,25 @@ self.addEventListener("activate", function (e) {
 
 self.addEventListener("fetch", function (e) {
   var url = new URL(e.request.url);
-  // Only handle same-origin GETs for the app shell; pass everything else through.
   if (e.request.method !== "GET" || url.origin !== location.origin) return;
   e.respondWith(
-    caches.match(e.request, { ignoreSearch: true }).then(function (hit) {
-      if (hit) return hit;
-      return fetch(e.request).then(function (res) {
-        return res;
-      }).catch(function () {
-        // navigation while offline: serve the shell
-        if (e.request.mode === "navigate") return caches.match("./index.html");
-        throw new Error("offline");
+    caches.open(CACHE).then(function (cache) {
+      return cache.match(e.request, { ignoreSearch: true }).then(function (hit) {
+        // "no-cache" revalidates against the server instead of trusting the
+        // browser's HTTP cache, so new deploys are picked up promptly.
+        var refresh = fetch(e.request, { cache: "no-cache" }).then(function (res) {
+          if (res && res.ok) cache.put(e.request, res.clone());
+          return res;
+        }).catch(function () { return null; });
+        if (hit) {
+          e.waitUntil(refresh);
+          return hit;
+        }
+        return refresh.then(function (res) {
+          if (res) return res;
+          if (e.request.mode === "navigate") return cache.match("./index.html");
+          throw new Error("offline");
+        });
       });
     })
   );

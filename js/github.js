@@ -278,6 +278,31 @@
     });
   }
 
+  // Re-run a transform over every stored recipe; PUT the ones that change.
+  // mapFn(recipe) returns the updated recipe, or null when nothing changed.
+  // Recipe files only — the index holds no parse-level fields, so it stays valid.
+  function reparseRecipes(mapFn, onProgress) {
+    return listDir("recipes").then(function (items) {
+      var files = items.filter(function (it) { return it.type === "file" && /\.json$/.test(it.name); });
+      var updated = [];
+      var chain = Promise.resolve();
+      files.forEach(function (f, i) {
+        chain = chain.then(function () {
+          if (onProgress) onProgress(i + 1, files.length, updated.length);
+          return getFile("recipes/" + f.name).then(function (file) {
+            var recipe;
+            try { recipe = JSON.parse(file.text); } catch (e) { return; }
+            var out = mapFn(recipe);
+            if (!out) return;
+            return putFileText("recipes/" + f.name, JSON.stringify(out, null, 2),
+              "Reparse: " + (out.title || f.name)).then(function () { updated.push(out); });
+          });
+        });
+      });
+      return chain.then(function () { return { checked: files.length, updated: updated }; });
+    });
+  }
+
   function putPhoto(id, base64Jpeg) {
     return putFileB64("photos/" + id + ".jpg", base64Jpeg, "Photo: " + id);
   }
@@ -311,6 +336,7 @@
     saveRecipe: saveRecipe,
     deleteRecipe: deleteRecipe,
     rebuildIndex: rebuildIndex,
+    reparseRecipes: reparseRecipes,
     putPhoto: putPhoto,
     getPhotoObjectUrl: getPhotoObjectUrl,
     encodeContent: encodeContent,

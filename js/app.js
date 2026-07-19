@@ -6,6 +6,7 @@
   var Imp = window.RecipeBox.Importers;
   var GH = window.RecipeBox.GitHub;
 
+  var APP_VERSION = "3 — 2026-07-19";
   var CATEGORIES = ["breakfast", "mains", "sides", "soups & salads", "pasta", "dessert", "baking", "drinks", "snacks", "sauces & staples", "other"];
   var IDX_KEY = "rb_index";
   var RECIPE_KEY = "rb_recipe_";
@@ -1216,11 +1217,15 @@
     html += '<div class="settings-block"><h2>Maintenance</h2>' +
       "<p>If the recipe list ever looks out of sync (a save was interrupted), rebuild the index from the recipe files.</p>" +
       '<button class="btn" id="rebuild-btn"' + (hasToken ? "" : " disabled") + ">Rebuild index</button> " +
-      '<span class="form-hint" id="rebuild-status"></span></div>';
+      '<span class="form-hint" id="rebuild-status"></span>' +
+      "<p style=\"margin-top:1rem\">After app updates that improve ingredient parsing, re-run the parser over every saved recipe so old recipes benefit too. Original text is never touched — only the parsed quantities/units are refreshed.</p>" +
+      '<button class="btn" id="reparse-btn"' + (hasToken ? "" : " disabled") + ">Reparse all recipes</button> " +
+      '<span class="form-hint" id="reparse-status"></span></div>';
 
     html += '<div class="settings-block"><h2>About</h2>' +
       "<p>A personal recipe box. The app itself is a public static page; every recipe, note, and photo stays in the private data repo, versioned by git. " +
-      "On iPhone/Android, use “Add to Home Screen” to install it like an app.</p></div>";
+      "On iPhone/Android, use “Add to Home Screen” to install it like an app.</p>" +
+      '<p class="form-hint">App version ' + esc(APP_VERSION) + "</p></div>";
 
     v.innerHTML = html;
 
@@ -1288,6 +1293,24 @@
       renderSettings();
     });
 
+    $("#reparse-btn").addEventListener("click", function () {
+      if (!requireOnlineAndToken()) return;
+      var st = $("#reparse-status");
+      $("#reparse-btn").disabled = true;
+      GH.reparseRecipes(reparseRecipeData, function (i, n, changed) {
+        st.textContent = "checking " + i + " / " + n + (changed ? " (" + changed + " updated)" : "") + "…";
+      }).then(function (res) {
+        res.updated.forEach(cacheRecipe);
+        if (state.current && res.updated.some(function (r) { return r.id === state.current.id; })) state.current = null;
+        st.textContent = "done — " + res.updated.length + " of " + res.checked + " recipes updated";
+        $("#reparse-btn").disabled = false;
+      }).catch(function (err) {
+        st.textContent = "reparse failed";
+        $("#reparse-btn").disabled = false;
+        handleApiError(err, "Reparse failed");
+      });
+    });
+
     $("#rebuild-btn").addEventListener("click", function () {
       if (!requireOnlineAndToken()) return;
       var st = $("#rebuild-status");
@@ -1307,6 +1330,23 @@
   }
 
   // ---------- misc ----------
+
+  // Re-run the current parser over a recipe's ingredient raw strings.
+  // Returns the updated recipe, or null when parsing is already up to date.
+  function reparseRecipeData(recipe) {
+    var changed = false;
+    var newIngs = (recipe.ingredients || []).map(function (ing) {
+      var p = Ing.parseIngredient(ing && ing.raw !== undefined ? ing.raw : String(ing));
+      if (JSON.stringify(p) !== JSON.stringify(ing)) changed = true;
+      return p;
+    });
+    if (!changed) return null;
+    var copy = JSON.parse(JSON.stringify(recipe));
+    copy.ingredients = newIngs;
+    // deliberately not bumping updatedAt: this is a technical refresh, and
+    // leaving it alone keeps the index entries valid without rewriting them
+    return copy;
+  }
 
   function debounce(fn, ms) {
     var t;
