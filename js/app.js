@@ -6,7 +6,7 @@
   var Imp = window.RecipeBox.Importers;
   var GH = window.RecipeBox.GitHub;
 
-  var APP_VERSION = "5 — 2026-07-19";
+  var APP_VERSION = "6 — 2026-07-19";
   var CATEGORIES = ["breakfast", "mains", "sides", "soups & salads", "pasta", "dessert", "baking", "drinks", "snacks", "sauces & staples", "other"];
   var IDX_KEY = "rb_index";
   var RECIPE_KEY = "rb_recipe_";
@@ -1140,7 +1140,7 @@
         '<div class="conv-eq">=</div>' +
         '<div class="conv-cell"><input type="number" id="cv-b" step="any"><span class="form-hint" style="text-align:center">grams</span></div>' +
         "</div>";
-      html += '<p class="conv-footnote">Spoon-and-level cup measures. Densities are sensible averages — close enough for cooking, double-check for finicky baking.</p>';
+      html += '<p class="conv-footnote">Spoon-and-level cup measures. Weights follow <a href="https://www.kingarthurbaking.com/learn/ingredient-weight-chart" target="_blank" rel="noopener">King Arthur Baking’s ingredient weight chart</a>.</p>';
     } else if (tab === "temp") {
       html += '<div class="conv-grid">' +
         '<div class="conv-cell"><input type="number" id="cv-a" value="350" step="any"><span class="form-hint" style="text-align:center">°F</span></div>' +
@@ -1195,7 +1195,7 @@
       "<tr><td>1 cup</td><td>16 tbsp · 240 ml</td></tr>" +
       "<tr><td>1 stick butter</td><td>½ cup · 113 g</td></tr>" +
       "<tr><td>1 cup flour</td><td>120 g</td></tr>" +
-      "<tr><td>1 cup sugar</td><td>200 g</td></tr>" +
+      "<tr><td>1 cup sugar</td><td>198 g</td></tr>" +
       "<tr><td>1 lb</td><td>454 g</td></tr>" +
       "<tr><td>350°F</td><td>175°C · gas 4</td></tr>" +
       "<tr><td>425°F</td><td>220°C · gas 7</td></tr>" +

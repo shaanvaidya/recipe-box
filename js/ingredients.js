@@ -54,20 +54,49 @@
   var UNIT_MAP = {};
   UNITS.forEach(function (u) { UNIT_MAP[u.id] = u; });
 
-  // g per cup, for cups<->grams conversion. Keys matched against item text.
+  // g per cup, for cups<->grams conversion. Values follow King Arthur
+  // Baking's ingredient weight chart (kingarthurbaking.com/learn/
+  // ingredient-weight-chart), normalized to grams per cup.
+  // `match` keywords drive auto-conversion of recipe ingredients; entries
+  // with no keywords are converter-only.
   var DENSITIES = [
-    { id: "flour", label: "All-purpose flour", gPerCup: 120, match: ["flour"] },
-    { id: "sugar", label: "Granulated sugar", gPerCup: 200, match: ["sugar"] },
-    { id: "brown-sugar", label: "Brown sugar (packed)", gPerCup: 220, match: ["brown sugar"] },
-    { id: "powdered-sugar", label: "Powdered sugar", gPerCup: 120, match: ["powdered sugar", "confectioners", "icing sugar"] },
-    { id: "butter", label: "Butter", gPerCup: 227, match: ["butter"] },
-    { id: "cocoa", label: "Cocoa powder", gPerCup: 100, match: ["cocoa"] },
-    { id: "honey", label: "Honey / syrup", gPerCup: 340, match: ["honey", "maple syrup", "molasses", "corn syrup"] },
-    { id: "oats", label: "Rolled oats", gPerCup: 90, match: ["oats", "oatmeal"] },
+    { id: "flour", label: "All-purpose / bread flour", gPerCup: 120, match: ["flour"] },
+    { id: "ww-flour", label: "Whole wheat flour", gPerCup: 113, match: ["whole wheat flour", "atta"] },
+    { id: "almond-flour", label: "Almond flour", gPerCup: 96, match: ["almond flour", "almond meal"] },
+    { id: "oat-flour", label: "Oat flour", gPerCup: 92, match: ["oat flour"] },
+    { id: "coconut-flour", label: "Coconut flour", gPerCup: 128, match: ["coconut flour"] },
+    { id: "cornmeal", label: "Cornmeal", gPerCup: 138, match: ["cornmeal"] },
+    { id: "sugar", label: "Granulated sugar", gPerCup: 198, match: ["sugar"] },
+    { id: "brown-sugar", label: "Brown sugar (packed)", gPerCup: 213, match: ["brown sugar"] },
+    { id: "powdered-sugar", label: "Confectioners' sugar", gPerCup: 113, match: ["powdered sugar", "confectioners", "icing sugar"] },
+    { id: "honey", label: "Honey", gPerCup: 336, match: ["honey"] },
+    { id: "maple-syrup", label: "Maple syrup", gPerCup: 312, match: ["maple syrup"] },
+    { id: "molasses", label: "Molasses", gPerCup: 340, match: ["molasses"] },
+    { id: "corn-syrup", label: "Corn syrup", gPerCup: 312, match: ["corn syrup"] },
+    { id: "butter", label: "Butter", gPerCup: 226, match: ["butter"] },
+    { id: "oil", label: "Vegetable oil", gPerCup: 198, match: ["oil"], preferVolume: true },
+    { id: "coconut-oil", label: "Coconut oil", gPerCup: 226, match: [] },
+    { id: "milk", label: "Milk / water", gPerCup: 227, match: ["milk", "water", "buttermilk", "cream"], preferVolume: true },
+    { id: "yogurt", label: "Yogurt / sour cream", gPerCup: 227, match: ["yogurt", "sour cream", "curd", "dahi"] },
+    { id: "cream-cheese", label: "Cream cheese", gPerCup: 227, match: ["cream cheese"] },
+    { id: "cocoa", label: "Cocoa powder", gPerCup: 84, match: ["cocoa"] },
+    { id: "choc-chips", label: "Chocolate chips / chopped", gPerCup: 170, match: ["chocolate chip", "choc chip", "chopped chocolate"] },
+    { id: "oats", label: "Rolled oats", gPerCup: 113, match: ["oats", "oatmeal"] },
+    { id: "cornstarch", label: "Cornstarch", gPerCup: 112, match: ["cornstarch", "corn starch"] },
+    { id: "baking-powder", label: "Baking powder", gPerCup: 192, match: [] },
+    { id: "baking-soda", label: "Baking soda", gPerCup: 288, match: [] },
+    { id: "yeast", label: "Yeast (instant)", gPerCup: 144, match: [] },
+    { id: "salt", label: "Table salt", gPerCup: 288, match: [] },
+    { id: "peanut-butter", label: "Peanut butter", gPerCup: 270, match: ["peanut butter"] },
+    { id: "almond-butter", label: "Almond butter", gPerCup: 272, match: ["almond butter"] },
     { id: "rice", label: "Rice (uncooked)", gPerCup: 185, match: ["rice"] },
-    { id: "milk", label: "Milk / water", gPerCup: 240, match: ["milk", "water", "buttermilk", "cream"], preferVolume: true },
-    { id: "oil", label: "Oil", gPerCup: 218, match: ["oil"], preferVolume: true },
-    { id: "choc-chips", label: "Chocolate chips", gPerCup: 170, match: ["chocolate chip", "choc chip"] }
+    { id: "walnuts", label: "Walnuts (chopped)", gPerCup: 113, match: ["walnut"] },
+    { id: "pecans", label: "Pecans (chopped)", gPerCup: 114, match: ["pecan"] },
+    { id: "raisins", label: "Raisins", gPerCup: 149, match: ["raisin"] },
+    { id: "coconut-shredded", label: "Coconut (shredded)", gPerCup: 85, match: ["shredded coconut", "desiccated coconut"] },
+    { id: "cheddar", label: "Cheddar (grated)", gPerCup: 113, match: ["cheddar"] },
+    { id: "parmesan", label: "Parmesan (grated)", gPerCup: 100, match: ["parmesan"] },
+    { id: "breadcrumbs", label: "Breadcrumbs (dried)", gPerCup: 112, match: ["breadcrumb", "panko"] }
   ];
 
   // More specific matches (longer keywords) win: "brown sugar" before "sugar".
