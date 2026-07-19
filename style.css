@@ -512,12 +512,12 @@ textarea { resize: vertical; min-height: 6rem; line-height: 1.55; }
 
 /* Two-column cookbook spread on wide screens: sticky ingredients | steps.
    Below the breakpoint the divs simply stack in normal flow. */
-@media (min-width: 1020px) {
-  main.wide { max-width: 1060px; }
+@media (min-width: 900px) {
+  main.wide { max-width: 1080px; }
   .recipe-columns {
     display: grid;
-    grid-template-columns: 340px 1fr;
-    gap: 3rem;
+    grid-template-columns: minmax(270px, 330px) 1fr;
+    gap: 2.5rem;
     align-items: start;
   }
   .recipe-col-ings {
