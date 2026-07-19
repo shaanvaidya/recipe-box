@@ -6,7 +6,7 @@
   var Imp = window.RecipeBox.Importers;
   var GH = window.RecipeBox.GitHub;
 
-  var APP_VERSION = "7 — 2026-07-19";
+  var APP_VERSION = "8 — 2026-07-19";
   var CATEGORIES = ["breakfast", "mains", "sides", "soups & salads", "pasta", "dessert", "baking", "drinks", "snacks", "sauces & staples", "other"];
   var IDX_KEY = "rb_index";
   var RECIPE_KEY = "rb_recipe_";
@@ -455,7 +455,6 @@
       '<button class="btn btn-accent" id="cook-btn">Cook</button>' +
       '<button class="btn" id="fav-btn">' + (r.favorite ? "★ Unfavorite" : "☆ Favorite") + "</button>" +
       '<a class="btn" href="#/edit/' + encodeURIComponent(r.id) + '">Edit</a>' +
-      '<button class="btn btn-ghost btn-danger" id="delete-btn">Delete</button>' +
       "</div>";
 
     // scale / unit bar
@@ -509,7 +508,8 @@
     if (r.sourceUrl) {
       html += '<p class="source-line">Source: <a href="' + esc(r.sourceUrl) + '" target="_blank" rel="noopener">' + esc(shortUrl(r.sourceUrl)) + "</a></p>";
     }
-    html += '<p class="source-line">Added ' + esc(fmtDate(r.createdAt)) + (r.updatedAt !== r.createdAt ? " · updated " + esc(fmtDate(r.updatedAt)) : "") + "</p>";
+    html += '<p class="source-line">Added ' + esc(fmtDate(r.createdAt)) + (r.updatedAt !== r.createdAt ? " · updated " + esc(fmtDate(r.updatedAt)) : "") +
+      ' · <button class="delete-quiet" id="delete-btn">delete recipe</button></p>';
 
     v.innerHTML = html;
 
