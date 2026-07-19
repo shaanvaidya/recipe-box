@@ -50,7 +50,8 @@
   }
   function fmtDate(iso) {
     if (!iso) return "";
-    var d = new Date(iso);
+    // date-only strings would parse as UTC midnight and shift a day locally
+    var d = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? new Date(iso + "T12:00:00") : new Date(iso);
     if (isNaN(d)) return iso;
     return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
   }

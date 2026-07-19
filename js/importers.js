@@ -13,11 +13,14 @@
   // Ordered fetch chain. A personal CORS proxy (e.g. Cloudflare Worker) can be
   // prepended here later: { name: "worker", kind: "html", build: function(u){...} }
   var PROXIES = [
-    { name: "allorigins", kind: "html", build: function (u) { return "https://api.allorigins.win/raw?url=" + encodeURIComponent(u); } },
-    { name: "corsproxy", kind: "html", build: function (u) { return "https://corsproxy.io/?url=" + encodeURIComponent(u); } },
-    { name: "jina", kind: "text", build: function (u) { return "https://r.jina.ai/" + u; } }
+    // direct first: a few sites allow CORS, and it fails fast when not
+    { name: "direct", kind: "html", timeout: 6000, build: function (u) { return u; } },
+    // allorigins is slow (7-12s typical) but the most reliable free proxy
+    { name: "allorigins", kind: "html", timeout: 20000, build: function (u) { return "https://api.allorigins.win/raw?url=" + encodeURIComponent(u); } },
+    { name: "corsproxy", kind: "html", timeout: 10000, build: function (u) { return "https://corsproxy.io/?url=" + encodeURIComponent(u); } },
+    // allorigins again: it 522s intermittently but often succeeds on retry
+    { name: "allorigins-retry", kind: "html", timeout: 20000, build: function (u) { return "https://api.allorigins.win/raw?url=" + encodeURIComponent(u); } }
   ];
-  var FETCH_TIMEOUT_MS = 8000;
 
   // ----- generic helpers -----
 
@@ -369,8 +372,8 @@
         return Promise.reject(err);
       }
       var proxy = PROXIES[idx];
-      if (onStatus) onStatus("Fetching page" + (idx > 0 ? " (attempt " + (idx + 1) + ")" : "") + "…");
-      return fetchWithTimeout(proxy.build(url), FETCH_TIMEOUT_MS)
+      if (onStatus) onStatus(idx === 0 ? "Fetching page…" : "Fetching page (attempt " + (idx + 1) + " — slower route)…");
+      return fetchWithTimeout(proxy.build(url), proxy.timeout || 10000)
         .then(function (res) {
           if (!res.ok) throw new Error("HTTP " + res.status);
           return res.text();
