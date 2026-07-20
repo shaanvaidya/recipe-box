@@ -15,11 +15,13 @@
   var PROXIES = [
     // direct first: a few sites allow CORS, and it fails fast when not
     { name: "direct", kind: "html", timeout: 6000, build: function (u) { return u; } },
-    // allorigins is slow (7-12s typical) but the most reliable free proxy
+    // fast and currently keyless (2026-07); may rate-limit under heavy use
+    { name: "cors.sh", kind: "html", timeout: 10000, build: function (u) { return "https://proxy.cors.sh/" + u; } },
+    // allorigins: slow and hangs some days, but a solid second opinion
     { name: "allorigins", kind: "html", timeout: 20000, build: function (u) { return "https://api.allorigins.win/raw?url=" + encodeURIComponent(u); } },
-    { name: "corsproxy", kind: "html", timeout: 10000, build: function (u) { return "https://corsproxy.io/?url=" + encodeURIComponent(u); } },
-    // allorigins again: it 522s intermittently but often succeeds on retry
-    { name: "allorigins-retry", kind: "html", timeout: 20000, build: function (u) { return "https://api.allorigins.win/raw?url=" + encodeURIComponent(u); } }
+    { name: "codetabs", kind: "html", timeout: 15000, build: function (u) { return "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(u); } }
+    // corsproxy.io and r.jina.ai now require API keys; a personal Cloudflare
+    // Worker can still be prepended here later.
   ];
 
   // ----- generic helpers -----
@@ -192,6 +194,25 @@
 
   // ----- microdata fallback (browser only) -----
 
+  // Paragraph-ish chunks (direct text nodes, <p>, <li>) inside a directions
+  // container -> one step each.
+  function collectStepBlocks(el, out) {
+    for (var i = 0; i < el.childNodes.length; i++) {
+      var n = el.childNodes[i];
+      if (n.nodeType === 3) {
+        var t = stripTags(n.textContent);
+        if (t) out.push(t);
+      } else if (n.nodeType === 1) {
+        if (/^(p|li)$/i.test(n.tagName)) {
+          var t2 = stripTags(n.textContent);
+          if (t2) out.push(t2);
+        } else {
+          collectStepBlocks(n, out);
+        }
+      }
+    }
+  }
+
   function extractMicrodata(doc, sourceUrl) {
     var scope = doc.querySelector('[itemtype*="schema.org/Recipe"], [itemtype*="schema.org/recipe"]');
     if (!scope) return null;
@@ -209,6 +230,13 @@
     var ingredients = propText("recipeIngredient");
     if (!ingredients.length) ingredients = propText("ingredients");
     var steps = propText("recipeInstructions");
+    if (!steps.length) {
+      // Some plugins (e.g. Jetpack on smittenkitchen) mark the directions
+      // block by class only, with steps as loose text nodes and <p>s.
+      var dir = scope.querySelector('[class*="directions"], [class*="instructions"]') ||
+        doc.querySelector('[class*="recipe-directions"], [class*="recipe-instructions"]');
+      if (dir) collectStepBlocks(dir, steps);
+    }
     if (steps.length === 1) {
       var split = steps[0].split(/(?=\b\d+[\.\)]\s)/).map(function (s) { return s.trim(); }).filter(Boolean);
       if (split.length > 1) steps = split;
@@ -220,7 +248,7 @@
       sourceUrl: sourceUrl || null,
       servings: Ingredients ? Ingredients.parseServings(propText("recipeYield")[0]) : null,
       prepMinutes: Ingredients ? Ingredients.isoDurationToMinutes(propText("prepTime")[0]) : null,
-      cookMinutes: Ingredients ? Ingredients.isoDurationToMinutes(propText("cookTime")[0]) : null,
+      cookMinutes: Ingredients ? Ingredients.isoDurationToMinutes(propText("cookTime")[0] || propText("totalTime")[0]) : null,
       ingredients: ingredients,
       steps: steps,
       category: (propText("recipeCategory")[0] || "").toLowerCase() || null,
