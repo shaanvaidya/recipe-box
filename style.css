@@ -317,6 +317,8 @@ a.tag-static:hover { background: var(--accent); color: #fff8f0; }
   .list-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 250px;
+    /* 1fr row absorbs a tall sidebar so it can't inflate the controls row */
+    grid-template-rows: auto 1fr;
     column-gap: 3.5rem;
     align-items: start;
   }

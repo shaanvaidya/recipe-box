@@ -6,7 +6,7 @@
   var Imp = window.RecipeBox.Importers;
   var GH = window.RecipeBox.GitHub;
 
-  var APP_VERSION = "14 — 2026-07-20";
+  var APP_VERSION = "15 — 2026-07-20";
   var CATEGORIES = ["breakfast", "mains", "sides", "soups & salads", "pasta", "dessert", "baking", "drinks", "snacks", "sauces & staples", "other"];
   var IDX_KEY = "rb_index";
   var RECIPE_KEY = "rb_recipe_";
