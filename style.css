@@ -312,7 +312,7 @@ a.tag-static:hover { background: var(--accent); color: #fff8f0; }
 /* Wide screens: filters move to a right sidebar next to the list. */
 @media (min-width: 1140px) {
   .wrap { max-width: 1100px; }
-  .banner, .view { max-width: 760px; margin-left: auto; margin-right: auto; }
+  main:not(.wide) .banner, main:not(.wide) .view { max-width: 760px; margin-left: auto; margin-right: auto; }
   #view-list:has(.list-layout) { max-width: none; }
   .list-layout {
     display: grid;

@@ -6,7 +6,7 @@
   var Imp = window.RecipeBox.Importers;
   var GH = window.RecipeBox.GitHub;
 
-  var APP_VERSION = "13 — 2026-07-20";
+  var APP_VERSION = "14 — 2026-07-20";
   var CATEGORIES = ["breakfast", "mains", "sides", "soups & salads", "pasta", "dessert", "baking", "drinks", "snacks", "sauces & staples", "other"];
   var IDX_KEY = "rb_index";
   var RECIPE_KEY = "rb_recipe_";
@@ -511,10 +511,7 @@
         : '<div class="recipe-photo-ph" id="recipe-photo-ph">photo…</div>';
     }
 
-    html += '<div class="recipe-columns">';
-    html += '<div class="recipe-col-ings">';
-
-    // scale / unit bar (lives with the ingredients it controls)
+    // scale / unit bar spans the page so the two columns start level
     html += '<div class="scale-bar">' +
       '<div class="seg" id="scale-seg">' +
       scaleBtn(0.5, "½×") + scaleBtn(1, "1×") + scaleBtn(2, "2×") + scaleBtn(3, "3×") +
@@ -525,6 +522,9 @@
       '<button data-unit="metric" class="' + (state.metric ? "active" : "") + '">Metric</button>' +
       "</div>" +
       "</div>";
+
+    html += '<div class="recipe-columns">';
+    html += '<div class="recipe-col-ings">';
 
     html += '<h2 class="section-head">Ingredients</h2>';
     html += '<ul class="ing-list" id="ing-list">';
