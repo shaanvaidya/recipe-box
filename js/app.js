@@ -6,7 +6,7 @@
   var Imp = window.RecipeBox.Importers;
   var GH = window.RecipeBox.GitHub;
 
-  var APP_VERSION = "9 — 2026-07-19";
+  var APP_VERSION = "10 — 2026-07-19";
   var CATEGORIES = ["breakfast", "mains", "sides", "soups & salads", "pasta", "dessert", "baking", "drinks", "snacks", "sauces & staples", "other"];
   var IDX_KEY = "rb_index";
   var RECIPE_KEY = "rb_recipe_";
@@ -430,10 +430,17 @@
     var v = $("#view-recipe");
     var html = "";
 
-    html += '<div class="recipe-head">';
+    html += '<div class="recipe-head"><div class="recipe-head-row">';
+    html += '<div class="recipe-head-main">';
     html += '<div class="recipe-cat">' + esc(r.category || "uncategorized") +
       (r.favorite ? ' <span class="fav-star">★ favorite</span>' : "") + "</div>";
     html += '<h1 class="recipe-title">' + esc(r.title) + "</h1>";
+    if (r.credit) {
+      var creditText = esc(r.credit);
+      html += '<div class="recipe-credit">from ' +
+        (r.sourceUrl ? '<a href="' + esc(r.sourceUrl) + '" target="_blank" rel="noopener">' + creditText + "</a>" : creditText) +
+        "</div>";
+    }
     var meta = [];
     if (r.servings) meta.push("<strong>" + esc(getScaledServings(r)) + "</strong> servings");
     if (r.prepMinutes) meta.push("prep <strong>" + fmtMinutes(r.prepMinutes) + "</strong>");
@@ -444,6 +451,13 @@
     }
     html += "</div>";
 
+    html += '<div class="recipe-actions">' +
+      '<button class="btn btn-accent" id="cook-btn">Cook</button>' +
+      '<button class="btn" id="fav-btn">' + (r.favorite ? "★ Unfavorite" : "☆ Favorite") + "</button>" +
+      '<a class="btn" href="#/edit/' + encodeURIComponent(r.id) + '">Edit</a>' +
+      "</div>";
+    html += "</div></div>";
+
     if (r.hasPhoto) {
       var cachedUrl = state.photoUrls[r.id];
       html += cachedUrl
@@ -451,13 +465,10 @@
         : '<div class="recipe-photo-ph" id="recipe-photo-ph">photo…</div>';
     }
 
-    html += '<div class="recipe-actions">' +
-      '<button class="btn btn-accent" id="cook-btn">Cook</button>' +
-      '<button class="btn" id="fav-btn">' + (r.favorite ? "★ Unfavorite" : "☆ Favorite") + "</button>" +
-      '<a class="btn" href="#/edit/' + encodeURIComponent(r.id) + '">Edit</a>' +
-      "</div>";
+    html += '<div class="recipe-columns">';
+    html += '<div class="recipe-col-ings">';
 
-    // scale / unit bar
+    // scale / unit bar (lives with the ingredients it controls)
     html += '<div class="scale-bar">' +
       '<div class="seg" id="scale-seg">' +
       scaleBtn(0.5, "½×") + scaleBtn(1, "1×") + scaleBtn(2, "2×") + scaleBtn(3, "3×") +
@@ -469,8 +480,6 @@
       "</div>" +
       "</div>";
 
-    html += '<div class="recipe-columns">';
-    html += '<div class="recipe-col-ings">';
     html += '<h2 class="section-head">Ingredients</h2>';
     html += '<ul class="ing-list" id="ing-list">';
     (r.ingredients || []).forEach(function (ing, i) {
@@ -628,7 +637,7 @@
 
   function blankDraft() {
     return {
-      title: "", sourceUrl: null, category: "", tags: [],
+      title: "", sourceUrl: null, credit: "", category: "", tags: [],
       servings: null, prepMinutes: null, cookMinutes: null,
       ingredientsText: "", stepsText: "",
       imageUrl: null, pendingPhotoB64: null, photoPreview: null,
@@ -640,6 +649,7 @@
     var draft = blankDraft();
     draft.title = d.title || "";
     draft.sourceUrl = d.sourceUrl;
+    draft.credit = d.credit || "";
     draft.category = normalizeCategory(d.category);
     draft.tags = d.tags || [];
     draft.servings = d.servings;
@@ -768,6 +778,7 @@
       var draft = blankDraft();
       draft.title = recipe.title;
       draft.sourceUrl = recipe.sourceUrl;
+      draft.credit = recipe.credit || "";
       draft.category = recipe.category || "";
       draft.tags = recipe.tags || [];
       draft.servings = recipe.servings;
@@ -796,7 +807,11 @@
       html += '<div class="banner">' + esc(d.warning) + "</div>";
     }
     html += '<div class="form-grid">';
-    html += '<div class="field"><label for="f-title">Title</label><input type="text" id="f-title" value="' + esc(d.title) + '" placeholder="e.g. Chana Masala"></div>';
+    html += '<div class="field-row">' +
+      '<div class="field" style="flex:2"><label for="f-title">Title</label><input type="text" id="f-title" value="' + esc(d.title) + '" placeholder="e.g. Chana Masala"></div>' +
+      '<div class="field"><label for="f-credit">Credit <span style="text-transform:none;letter-spacing:0">(who it’s from)</span></label>' +
+      '<input type="text" id="f-credit" value="' + esc(d.credit || "") + '" placeholder="e.g. Ranveer Brar"></div>' +
+      "</div>";
     html += '<div class="field-row">' +
       '<div class="field"><label for="f-category">Category</label>' +
       '<input type="text" id="f-category" list="cat-list" value="' + esc(d.category) + '" placeholder="mains">' +
@@ -908,6 +923,7 @@
     var recipe = existing ? JSON.parse(JSON.stringify(existing)) : {};
     recipe.title = title;
     recipe.sourceUrl = d.sourceUrl || (existing ? existing.sourceUrl : null);
+    recipe.credit = $("#f-credit", slot).value.trim() || null;
     recipe.category = normalizeCategory($("#f-category", slot).value.trim()) || null;
     recipe.tags = $("#f-tags", slot).value.split(",").map(function (t) { return t.trim().toLowerCase(); }).filter(Boolean);
     recipe.servings = parseInt($("#f-servings", slot).value, 10) || null;

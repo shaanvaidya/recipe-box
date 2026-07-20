@@ -365,7 +365,17 @@ textarea { resize: vertical; min-height: 6rem; line-height: 1.55; }
 
 /* ---------- Recipe view ---------- */
 
-.recipe-head { margin-bottom: 1.4rem; }
+.recipe-head { margin-bottom: 1.1rem; }
+.recipe-head-row {
+  display: flex; flex-wrap: wrap;
+  gap: 0.9rem 2rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.recipe-head-main { min-width: 0; flex: 1 1 24rem; }
+.recipe-credit { color: var(--ink-dim); font-size: 0.92rem; margin: -0.2rem 0 0.5rem; }
+.recipe-credit a { color: var(--accent-ink); text-decoration: none; }
+.recipe-credit a:hover { text-decoration: underline; }
 .recipe-cat {
   font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--accent-ink);
@@ -374,10 +384,10 @@ textarea { resize: vertical; min-height: 6rem; line-height: 1.55; }
 .recipe-title {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(1.9rem, 6vw, 2.6rem);
+  font-size: clamp(1.7rem, 5vw, 2.2rem);
   letter-spacing: -0.03em;
   line-height: 1.12;
-  margin: 0 0 0.6rem;
+  margin: 0 0 0.5rem;
 }
 .recipe-meta-row {
   display: flex; flex-wrap: wrap; gap: 0.35rem 1.1rem;
@@ -404,7 +414,10 @@ textarea { resize: vertical; min-height: 6rem; line-height: 1.55; }
 
 .recipe-actions {
   display: flex; flex-wrap: wrap; gap: 0.5rem;
-  margin: 1.2rem 0 1.8rem;
+  margin: 0;
+}
+@media (min-width: 900px) {
+  .recipe-head-row .recipe-actions { margin-top: 0.4rem; flex: none; }
 }
 
 .section-head {

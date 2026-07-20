@@ -114,6 +114,18 @@
     return null;
   }
 
+  // author: string | {name} | array of either -> display name or null
+  function extractAuthor(a) {
+    var arr = asArray(a);
+    for (var i = 0; i < arr.length; i++) {
+      if (typeof arr[i] === "string" && arr[i].trim()) return stripTags(arr[i]);
+      if (arr[i] && typeof arr[i] === "object" && typeof arr[i].name === "string" && arr[i].name.trim()) {
+        return stripTags(arr[i].name);
+      }
+    }
+    return null;
+  }
+
   function extractTags(node) {
     var tags = [];
     var kw = node.keywords;
@@ -143,6 +155,7 @@
     return {
       title: stripTags(firstString(node.name) || "") || null,
       sourceUrl: sourceUrl || null,
+      credit: extractAuthor(node.author),
       servings: Ingredients ? Ingredients.parseServings(node.recipeYield) : null,
       prepMinutes: Ingredients ? Ingredients.isoDurationToMinutes(firstString(node.prepTime)) : null,
       cookMinutes: Ingredients ? Ingredients.isoDurationToMinutes(firstString(node.cookTime) || firstString(node.totalTime)) : null,
