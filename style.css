@@ -262,7 +262,9 @@ textarea { resize: vertical; min-height: 6rem; line-height: 1.55; }
   border-radius: 999px;
   padding: 0.18rem 0.6rem;
   display: inline-block;
+  text-decoration: none;
 }
+a.tag-static:hover { background: var(--accent); color: #fff8f0; }
 
 /* Segmented control */
 .seg {
@@ -325,6 +327,7 @@ textarea { resize: vertical; min-height: 6rem; line-height: 1.55; }
   flex-shrink: 1;
 }
 .fav-star { color: var(--gold); font-size: 0.95rem; flex: none; transform: translateY(-1px); }
+.made-badge { color: var(--ok); font-size: 0.95rem; font-weight: 700; flex: none; transform: translateY(-1px); }
 .leader {
   flex: 1;
   min-width: 1.5rem;

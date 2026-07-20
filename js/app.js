@@ -6,7 +6,7 @@
   var Imp = window.RecipeBox.Importers;
   var GH = window.RecipeBox.GitHub;
 
-  var APP_VERSION = "10 — 2026-07-19";
+  var APP_VERSION = "11 — 2026-07-20";
   var CATEGORIES = ["breakfast", "mains", "sides", "soups & salads", "pasta", "dessert", "baking", "drinks", "snacks", "sauces & staples", "other"];
   var IDX_KEY = "rb_index";
   var RECIPE_KEY = "rb_recipe_";
@@ -18,6 +18,7 @@
     query: "",
     category: null,
     tags: new Set(),
+    made: null,          // null | true | false — "made it" filter
     sort: "recent",
     current: null,        // full recipe being viewed
     scale: 1,
@@ -207,6 +208,11 @@
     return out.sort();
   }
 
+  function titleForId(id) {
+    var found = (state.index ? state.index.recipes : []).filter(function (r) { return r.id === id; })[0];
+    return found ? found.title : null;
+  }
+
   function usedCategories() {
     var seen = {};
     (state.index ? state.index.recipes : []).forEach(function (r) {
@@ -226,6 +232,7 @@
     var list = (state.index ? state.index.recipes : []).slice();
     var q = state.query.trim().toLowerCase();
     if (state.category) list = list.filter(function (r) { return r.category === state.category; });
+    if (state.made !== null) list = list.filter(function (r) { return !!r.madeIt === state.made; });
     if (state.tags.size) {
       list = list.filter(function (r) {
         var tags = r.tags || [];
@@ -316,6 +323,10 @@
       });
       html += "</div>";
     }
+    html += '<div class="chip-row" id="made-row"><span class="chip-row-label">Made it</span>' +
+      '<button class="chip' + (state.made === true ? " active" : "") + '" data-made="true">✓ Made</button>' +
+      '<button class="chip' + (state.made === false ? " active" : "") + '" data-made="false">Not yet</button>' +
+      "</div>";
     html += "</div>";
 
     var list = filteredRecipes();
@@ -329,6 +340,7 @@
         if (r.totalMinutes) meta.push(fmtMinutes(r.totalMinutes));
         html += '<li class="recipe-item"><a href="#/recipe/' + encodeURIComponent(r.id) + '">' +
           (r.favorite ? '<span class="fav-star">★</span>' : "") +
+          (r.madeIt ? '<span class="made-badge" title="Made it">✓</span>' : "") +
           '<span class="recipe-item-title">' + esc(r.title) + "</span>" +
           '<span class="leader"></span>' +
           '<span class="recipe-item-meta">' + esc(meta.join(" · ")) + "</span>" +
@@ -359,6 +371,13 @@
       b.addEventListener("click", function () {
         var t = b.getAttribute("data-tag");
         if (state.tags.has(t)) state.tags.delete(t); else state.tags.add(t);
+        renderList();
+      });
+    });
+    v.querySelectorAll("[data-made]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var val = b.getAttribute("data-made") === "true";
+        state.made = (state.made === val) ? null : val;
         renderList();
       });
     });
@@ -433,7 +452,8 @@
     html += '<div class="recipe-head"><div class="recipe-head-row">';
     html += '<div class="recipe-head-main">';
     html += '<div class="recipe-cat">' + esc(r.category || "uncategorized") +
-      (r.favorite ? ' <span class="fav-star">★ favorite</span>' : "") + "</div>";
+      (r.favorite ? ' <span class="fav-star">★ favorite</span>' : "") +
+      (r.madeIt ? ' <span class="made-badge" title="Made it">✓ made it</span>' : "") + "</div>";
     html += '<h1 class="recipe-title">' + esc(r.title) + "</h1>";
     if (r.credit) {
       var creditText = esc(r.credit);
@@ -454,6 +474,7 @@
     html += '<div class="recipe-actions">' +
       '<button class="btn btn-accent" id="cook-btn">Cook</button>' +
       '<button class="btn" id="fav-btn">' + (r.favorite ? "★ Unfavorite" : "☆ Favorite") + "</button>" +
+      '<button class="btn" id="made-btn">' + (r.madeIt ? "✓ Made it" : "Mark as made") + "</button>" +
       '<a class="btn" href="#/edit/' + encodeURIComponent(r.id) + '">Edit</a>' +
       "</div>";
     html += "</div></div>";
@@ -514,6 +535,16 @@
       '<button class="btn" id="note-btn">Add note</button></div>';
     html += "</div>";
 
+    var relatedLinks = (r.relatedIds || [])
+      .map(function (id) { return { id: id, title: titleForId(id) }; })
+      .filter(function (x) { return x.title; });
+    if (relatedLinks.length) {
+      html += '<h2 class="section-head">Goes with</h2><div class="recipe-tags">' +
+        relatedLinks.map(function (x) {
+          return '<a class="tag-static" href="#/recipe/' + encodeURIComponent(x.id) + '">' + esc(x.title) + "</a>";
+        }).join("") + "</div>";
+    }
+
     if (r.sourceUrl) {
       html += '<p class="source-line">Source: <a href="' + esc(r.sourceUrl) + '" target="_blank" rel="noopener">' + esc(shortUrl(r.sourceUrl)) + "</a></p>";
     }
@@ -540,6 +571,7 @@
     // events
     $("#cook-btn").addEventListener("click", function () { enterCookMode(r); });
     $("#fav-btn").addEventListener("click", toggleFavorite);
+    $("#made-btn").addEventListener("click", toggleMadeIt);
     $("#delete-btn").addEventListener("click", deleteCurrent);
     v.querySelectorAll("#scale-seg button").forEach(function (b) {
       b.addEventListener("click", function () {
@@ -600,6 +632,22 @@
     });
   }
 
+  function toggleMadeIt() {
+    if (!requireOnlineAndToken()) return;
+    var r = state.current;
+    r.madeIt = !r.madeIt;
+    r.updatedAt = new Date().toISOString();
+    renderRecipe();
+    GH.saveRecipe(r).then(function () {
+      cacheRecipe(r);
+      refreshIndexInBackground();
+    }).catch(function (err) {
+      r.madeIt = !r.madeIt;
+      renderRecipe();
+      handleApiError(err, "Couldn't save");
+    });
+  }
+
   function addNote() {
     if (!requireOnlineAndToken()) return;
     var input = $("#note-input");
@@ -639,7 +687,7 @@
     return {
       title: "", sourceUrl: null, credit: "", category: "", tags: [],
       servings: null, prepMinutes: null, cookMinutes: null,
-      ingredientsText: "", stepsText: "",
+      ingredientsText: "", stepsText: "", relatedTitles: "",
       imageUrl: null, pendingPhotoB64: null, photoPreview: null,
       warning: null
     };
@@ -786,6 +834,7 @@
       draft.cookMinutes = recipe.cookMinutes;
       draft.ingredientsText = (recipe.ingredients || []).map(function (i) { return i.raw; }).join("\n");
       draft.stepsText = (recipe.steps || []).join("\n");
+      draft.relatedTitles = (recipe.relatedIds || []).map(titleForId).filter(Boolean).join(", ");
       draft._existing = recipe;
       state.draft = draft;
       v.innerHTML = '<h1 class="view-title">Edit recipe</h1><div id="edit-form-slot"></div>';
@@ -830,6 +879,12 @@
       '<div class="parse-preview" id="parse-preview" hidden></div></div>';
     html += '<div class="field"><label for="f-steps">Steps — one per line</label>' +
       '<textarea id="f-steps" rows="10" placeholder="Heat the oil in a large pan.&#10;Add the onion and cook until golden.">' + esc(d.stepsText) + "</textarea></div>";
+    var otherTitles = (state.index ? state.index.recipes : [])
+      .filter(function (r) { return r.id !== state.editingId; })
+      .map(function (r) { return r.title; });
+    html += '<div class="field"><label for="f-related">Goes with <span style="text-transform:none;letter-spacing:0">(comma-separated recipe titles)</span></label>' +
+      '<input type="text" id="f-related" list="related-list" value="' + esc(d.relatedTitles) + '" placeholder="e.g. Paprika Oil, Lazy Turkish-ish Flatbread">' +
+      '<datalist id="related-list">' + otherTitles.map(function (t) { return '<option value="' + esc(t) + '">'; }).join("") + "</datalist></div>";
     html += '<div class="field"><label>Photo</label><div class="photo-field" id="photo-field">' +
       '<input type="file" id="f-photo" accept="image/*" style="max-width:16rem">' +
       '<span id="photo-status" class="form-hint"></span>' +
@@ -933,6 +988,15 @@
     recipe.steps = steps;
     recipe.notes = existing ? (existing.notes || []) : [];
     recipe.favorite = existing ? !!existing.favorite : false;
+    recipe.madeIt = existing ? !!existing.madeIt : false;
+    var allRecipes = state.index ? state.index.recipes : [];
+    var selfId = existing ? existing.id : null;
+    recipe.relatedIds = $("#f-related", slot).value.split(",")
+      .map(function (t) { return t.trim().toLowerCase(); }).filter(Boolean)
+      .map(function (t) {
+        var match = allRecipes.filter(function (r) { return r.id !== selfId && r.title.toLowerCase() === t; })[0];
+        return match ? match.id : null;
+      }).filter(Boolean);
     recipe.createdAt = existing ? existing.createdAt : now;
     recipe.updatedAt = now;
     if (!existing) {

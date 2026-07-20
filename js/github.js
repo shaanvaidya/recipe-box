@@ -208,6 +208,7 @@
       category: recipe.category || null,
       tags: recipe.tags || [],
       favorite: !!recipe.favorite,
+      madeIt: !!recipe.madeIt,
       hasPhoto: !!recipe.hasPhoto,
       totalMinutes: (recipe.prepMinutes || 0) + (recipe.cookMinutes || 0) || null,
       updatedAt: recipe.updatedAt
