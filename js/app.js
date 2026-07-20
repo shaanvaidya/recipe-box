@@ -6,7 +6,7 @@
   var Imp = window.RecipeBox.Importers;
   var GH = window.RecipeBox.GitHub;
 
-  var APP_VERSION = "11 — 2026-07-20";
+  var APP_VERSION = "12 — 2026-07-20";
   var CATEGORIES = ["breakfast", "mains", "sides", "soups & salads", "pasta", "dessert", "baking", "drinks", "snacks", "sauces & staples", "other"];
   var IDX_KEY = "rb_index";
   var RECIPE_KEY = "rb_recipe_";
@@ -18,6 +18,7 @@
     query: "",
     category: null,
     tags: new Set(),
+    tagsExpanded: false,  // full tag list shown vs top tags + "more"
     made: null,          // null | true | false — "made it" filter
     sort: "recent",
     current: null,        // full recipe being viewed
@@ -198,14 +199,13 @@
   // ---------- list view ----------
 
   function allTags() {
-    var seen = {};
-    var out = [];
+    var counts = {};
     (state.index ? state.index.recipes : []).forEach(function (r) {
       (r.tags || []).forEach(function (t) {
-        if (!seen[t]) { seen[t] = true; out.push(t); }
+        counts[t] = (counts[t] || 0) + 1;
       });
     });
-    return out.sort();
+    return { names: Object.keys(counts).sort(), counts: counts };
   }
 
   function titleForId(id) {
@@ -307,7 +307,8 @@
       "</select></div>";
 
     var cats = usedCategories();
-    var tags = allTags();
+    var tagInfo = allTags();
+    var tags = tagInfo.names;
     html += '<div class="filter-rows">';
     if (cats.length) {
       html += '<div class="chip-row" id="cat-row"><span class="chip-row-label">Category</span>';
@@ -317,10 +318,24 @@
       html += "</div>";
     }
     if (tags.length) {
+      // Collapse long tag lists to the most-used few; active tags always stay visible.
+      var TAG_LIMIT = 12;
+      var collapsible = tags.length > TAG_LIMIT + 3;
+      var visible = tags;
+      if (collapsible && !state.tagsExpanded) {
+        var top = tags.slice().sort(function (a, b) {
+          return (tagInfo.counts[b] - tagInfo.counts[a]) || a.localeCompare(b);
+        }).slice(0, TAG_LIMIT);
+        visible = tags.filter(function (t) { return top.indexOf(t) !== -1 || state.tags.has(t); });
+      }
       html += '<div class="chip-row" id="tag-row"><span class="chip-row-label">Tags</span>';
-      tags.forEach(function (t) {
+      visible.forEach(function (t) {
         html += '<button class="chip chip-tag' + (state.tags.has(t) ? " active" : "") + '" data-tag="' + esc(t) + '">' + esc(t) + "</button>";
       });
+      if (collapsible) {
+        html += '<button class="chip chip-more" id="tag-more">' +
+          (state.tagsExpanded ? "less −" : "+ " + (tags.length - visible.length) + " more") + "</button>";
+      }
       html += "</div>";
     }
     html += '<div class="chip-row" id="made-row"><span class="chip-row-label">Made it</span>' +
@@ -374,6 +389,13 @@
         renderList();
       });
     });
+    var moreBtn = $("#tag-more", v);
+    if (moreBtn) {
+      moreBtn.addEventListener("click", function () {
+        state.tagsExpanded = !state.tagsExpanded;
+        renderList();
+      });
+    }
     v.querySelectorAll("[data-made]").forEach(function (b) {
       b.addEventListener("click", function () {
         var val = b.getAttribute("data-made") === "true";

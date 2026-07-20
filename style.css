@@ -253,6 +253,8 @@ textarea { resize: vertical; min-height: 6rem; line-height: 1.55; }
   background: var(--ink); border-color: var(--ink); color: var(--bg);
 }
 .chip-tag.active { background: var(--accent); border-color: var(--accent); color: #fff8f0; }
+.chip-more { border-style: dashed; color: var(--ink-faint); }
+.chip-more:hover { border-style: dashed; }
 
 .tag-static {
   font-size: 0.72rem; font-weight: 700;
