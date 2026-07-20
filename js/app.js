@@ -6,7 +6,7 @@
   var Imp = window.RecipeBox.Importers;
   var GH = window.RecipeBox.GitHub;
 
-  var APP_VERSION = "12 — 2026-07-20";
+  var APP_VERSION = "13 — 2026-07-20";
   var CATEGORIES = ["breakfast", "mains", "sides", "soups & salads", "pasta", "dessert", "baking", "drinks", "snacks", "sauces & staples", "other"];
   var IDX_KEY = "rb_index";
   var RECIPE_KEY = "rb_recipe_";
@@ -298,6 +298,7 @@
       return;
     }
 
+    html += '<div class="list-layout">';
     html += '<div class="list-controls">' +
       '<input type="search" class="search-input" id="search-input" placeholder="Search recipes or ingredients…" value="' + esc(state.query) + '">' +
       '<select id="sort-select" aria-label="Sort">' +
@@ -309,7 +310,7 @@
     var cats = usedCategories();
     var tagInfo = allTags();
     var tags = tagInfo.names;
-    html += '<div class="filter-rows">';
+    html += '<aside class="filter-rows" aria-label="Filters">';
     if (cats.length) {
       html += '<div class="chip-row" id="cat-row"><span class="chip-row-label">Category</span>';
       cats.forEach(function (c) {
@@ -342,8 +343,9 @@
       '<button class="chip' + (state.made === true ? " active" : "") + '" data-made="true">✓ Made</button>' +
       '<button class="chip' + (state.made === false ? " active" : "") + '" data-made="false">Not yet</button>' +
       "</div>";
-    html += "</div>";
+    html += "</aside>";
 
+    html += '<div class="list-main">';
     var list = filteredRecipes();
     if (!list.length) {
       html += '<div class="empty-state"><h2>No matches</h2><p>Try a different search or clear the filters.</p></div>';
@@ -365,6 +367,7 @@
       html += "</ul>";
       html += '<p class="count-note">' + list.length + " shown</p>";
     }
+    html += "</div></div>"; // .list-main, .list-layout
     v.innerHTML = html;
 
     var si = $("#search-input");
